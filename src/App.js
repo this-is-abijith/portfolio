@@ -113,6 +113,13 @@ const projects = [
     stack: ["Python", "LSTM", "Pandas", "scikit-learn"],
     href: "https://github.com/this-is-abijith/bitcoin-price-prediction-ai",
   },
+  {
+  id: "04",
+  name: "Rainfall Prediction App",
+  desc: "Ensemble ML model (Random Forest + Gradient Boosting) predicting rain probability from weather inputs via a Flask web interface.",
+  stack: ["Python", "Flask", "scikit-learn", "Random Forest"],
+  href: "https://github.com/this-is-abijith/rainfall-prediction-app",
+}
 ];
 
 const NAV_LINKS = ["about", "skills", "projects", "contact"];
@@ -494,7 +501,7 @@ export default function App() {
       {/* ── MARQUEE ── */}
       <div style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", padding: "12px 0" }} className="marquee-track">
         <div className="marquee-inner">
-          {Array(6).fill(["MACHINE LEARNING","✦","REACT","✦","PYTHON","✦","TENSORFLOW","✦","NODE.JS","✦","COMPUTER VISION","✦","DEEP LEARNING","✦"]).flat().map((t, i) => (
+          {Array(6).fill(["MACHINE LEARNING","✦","REACT","✦","PYTHON","✦","TENSORFLOW","✦","NODE.JS","✦","COMPUTER VISION","✦","DEEP LEARNING","✦","FLASK","✦","SCIKIT-LEARN","✦"]).flat().map((t, i) => (
             <span key={i} className="mono" style={{ fontSize: 11, letterSpacing: "0.2em", marginRight: 32, color: t === "✦" ? "var(--green)" : "#333", whiteSpace: "nowrap" }}>{t}</span>
           ))}
         </div>
@@ -524,7 +531,7 @@ export default function App() {
 
           <div className="stats-grid">
             {[
-              { n: 3,   s: "+", label: "AI Projects"  },
+              { n: 4,   s: "+", label: "AI Projects"  },
               { n: 2,   s: "+", label: "Years Coding" },
               { n: 8,   s: "+", label: "Technologies" },
               { n: 100, s: "%", label: "Committed"    },
