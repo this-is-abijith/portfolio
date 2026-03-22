@@ -331,8 +331,10 @@ export default function App() {
 
         /* Hero */
         .hero {
-          min-height: 100vh; display: flex; flex-direction: column; justify-content: flex-end;
-          padding: 80px var(--pad) 64px; max-width: var(--max); margin: 0 auto; position: relative;
+          min-height: 100vh;
+          display: flex; flex-direction: column; justify-content: center;
+          padding: 80px var(--pad) 64px;
+          max-width: var(--max); margin: 0 auto; position: relative;
         }
         .hero-status {
           position: absolute; top: 80px; left: var(--pad); right: var(--pad);
