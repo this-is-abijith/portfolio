@@ -1,5 +1,6 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
+import TechGlobe from "./TechGlobe";
 
 /* ─── Glitch Text ──────────────────────────────────────────────────── */
 function GlitchText({ text }) {
@@ -42,25 +43,6 @@ function Typewriter({ strings, speed = 80 }) {
       {display}<span className="caret">▮</span>
     </span>
   );
-}
-
-/* ─── Counter ──────────────────────────────────────────────────────── */
-function Counter({ to, suffix = "" }) {
-  const [val, setVal] = useState(0);
-  const ref = useRef(null);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) {
-        let n = 0;
-        const step = () => { n += Math.ceil(to / 40); if (n >= to) { setVal(to); return; } setVal(n); requestAnimationFrame(step); };
-        requestAnimationFrame(step);
-        obs.disconnect();
-      }
-    });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, [to]);
-  return <span ref={ref}>{val}{suffix}</span>;
 }
 
 /* ─── Custom Cursor (mouse only) ──────────────────────────────────── */
@@ -133,18 +115,12 @@ const projects = [
     id: "06", name: "AI Image Upscaler",
     desc: "Real-ESRGAN neural network upscaling images up to 4× with GPU acceleration via Vulkan. Batch processing, before/after comparison slider, and fallback chain to Pillow LANCZOS.",
     stack: ["Python", "Real-ESRGAN", "Vulkan", "Pillow"],
-    href: "https://github.com/this-is-abijith/image-upscaler-ai",
+    href: "https://github.com/this-is-abijith",
   },
 ];
 
 const INITIAL_SHOW = 4;
 const NAV_LINKS    = ["about", "skills", "projects", "contact"];
-
-const MARQUEE_ITEMS = [
-  "MACHINE LEARNING","✦","REACT","✦","PYTHON","✦","TENSORFLOW","✦",
-  "NODE.JS","✦","COMPUTER VISION","✦","MEDIAPIPE","✦","FLASK","✦",
-  "SCIKIT-LEARN","✦","OPENCV","✦","REAL-ESRGAN","✦","VULKAN","✦","NUMPY",
-];
 
 /* ─── App ──────────────────────────────────────────────────────────── */
 export default function App() {
@@ -291,13 +267,6 @@ export default function App() {
         }
         .proj-card:hover::before { transform: scaleY(1); }
 
-        /* Marquee — static, readable */
-        .marquee-track {
-          border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-          padding: 14px var(--pad); overflow: hidden;
-        }
-        .marquee-inner { display: flex; flex-wrap: wrap; gap: 4px 0; }
-
         .section { max-width: var(--max); margin: 0 auto; padding: 100px var(--pad); }
 
         /* Navbar */
@@ -331,10 +300,8 @@ export default function App() {
 
         /* Hero */
         .hero {
-          min-height: 100vh;
-          display: flex; flex-direction: column; justify-content: center;
-          padding: 80px var(--pad) 64px;
-          max-width: var(--max); margin: 0 auto; position: relative;
+          min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+          padding: 80px var(--pad) 64px; max-width: var(--max); margin: 0 auto; position: relative;
         }
         .hero-status {
           position: absolute; top: 80px; left: var(--pad); right: var(--pad);
@@ -349,7 +316,6 @@ export default function App() {
           font-weight: 800; line-height: 0.9; letter-spacing: -0.03em;
           -webkit-text-stroke: 1px var(--white); color: transparent;
         }
-        /* Typewriter fix — column layout, buttons never shift */
         .hero-bottom { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; margin-top: 40px; }
         .hero-btns   { display: flex; gap: 12px; flex-wrap: wrap; }
         .scroll-hint {
@@ -359,13 +325,9 @@ export default function App() {
         }
 
         /* About */
-        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); }
-        .stat-cell  { padding: 32px 24px; }
-        .stat-b-r   { border-right:  1px solid var(--border); }
-        .stat-b-b   { border-bottom: 1px solid var(--border); }
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
 
-        /* Skills — tag + name + bar, NO percentage */
+        /* Skills */
         .skill-row {
           display: grid; grid-template-columns: 64px 1fr 120px;
           gap: 20px; align-items: center;
@@ -403,36 +365,27 @@ export default function App() {
           .hamburger { display: block; }
           .section   { padding: 72px var(--pad); }
 
-          /* Mobile hero fix — center vertically, status in flow */
           .hero {
-          min-height: unset;
-          justify-content: flex-start;
-          padding-top: 80px;
-          padding-bottom: 64px;
-          gap: 12px;
-                }
+            justify-content: center;
+            padding-top: 100px;
+            padding-bottom: 48px;
+            gap: 12px;
+          }
           .hero-status {
-            position: relative;
-            top: auto; left: auto; right: auto;
-            margin-bottom: 8px;
+            position: relative; top: auto; left: auto; right: auto; margin-bottom: 8px;
           }
 
-          /* Skills — tag + name only, hide bar */
           .skill-row    { grid-template-columns: 52px 1fr; gap: 12px; }
           .skill-bar-bg { display: none; }
 
-          /* Projects stacked */
           .proj-row  { grid-template-columns: 1fr; gap: 10px; }
           .proj-num  { display: none; }
-
           .scroll-hint { display: none; }
         }
 
         /* ════════ SMALL PHONE ≤ 400px ════════ */
         @media (max-width: 400px) {
           .hero-btns > * { width: 100%; text-align: center; }
-          .stats-grid    { grid-template-columns: 1fr; }
-          .stat-b-r      { border-right: none; border-bottom: 1px solid var(--border); }
         }
       `}</style>
 
@@ -510,19 +463,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* ── MARQUEE (static, readable) ── */}
-      <div className="marquee-track">
-        <div className="marquee-inner">
-          {MARQUEE_ITEMS.map((t, i) => (
-            <span key={i} className="mono" style={{
-              fontSize: 11, letterSpacing: "0.2em", marginRight: 28,
-              color: t === "✦" ? "var(--green)" : "#888",
-              whiteSpace: "nowrap",
-            }}>{t}</span>
-          ))}
-        </div>
-      </div>
-
       {/* ── ABOUT ── */}
       <motion.section id="about" className="section"
         initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
@@ -543,22 +483,11 @@ export default function App() {
               From CNN-based medical imaging to YOLO object detection — precision and obsessive attention to detail in every project.
             </p>
           </div>
-          <div className="stats-grid">
-            {[
-              { n: 6,   s: "+", label: "AI Projects"  },
-              { n: 2,   s: "+", label: "Years Coding" },
-              { n: 10,  s: "+", label: "Technologies" },
-              { n: 100, s: "%", label: "Committed"    },
-            ].map((stat, i) => (
-              <div key={i} className={`stat-cell${i % 2 === 0 ? " stat-b-r" : ""}${i < 2 ? " stat-b-b" : ""}`}>
-                <p className="syne green" style={{ fontSize: "clamp(32px, 6vw, 52px)", fontWeight: 800, lineHeight: 1 }}>
-                  <Counter to={stat.n} suffix={stat.s} />
-                </p>
-                <p className="mono muted" style={{ fontSize: 10, marginTop: 8, letterSpacing: "0.12em" }}>
-                  {stat.label.toUpperCase()}
-                </p>
-              </div>
-            ))}
+
+          {/* Globe replaces stats */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <p className="mono muted" style={{ fontSize: 10, letterSpacing: "0.2em" }}>// DRAG TO ROTATE</p>
+            <TechGlobe />
           </div>
         </div>
       </motion.section>
