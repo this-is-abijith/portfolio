@@ -486,7 +486,8 @@ export default function App() {
 
           {/* Globe replaces stats */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <p className="mono muted" style={{ fontSize: 10, letterSpacing: "0.2em" }}>// DRAG TO ROTATE</p>
+            <p className="mono muted" style={{ fontSize: 10, letterSpacing: "0.2em" }}></p>
+            DRAG TO ROTATE
             <TechGlobe />
           </div>
         </div>
