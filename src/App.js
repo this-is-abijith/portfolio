@@ -366,13 +366,17 @@ export default function App() {
           .hamburger { display: block; }
           .section   { padding: 72px var(--pad); }
 
+          /* FIX: Overriding the min-height and adjusting padding so it wraps the content tightly */
           .hero {
             justify-content: center;
-            padding-top: 72px;
-            padding-bottom: 0px;
+            padding-top: 100px; /* Space for the fixed navbar */
+            padding-bottom: 0px; 
+            min-height: auto; /* This removes the empty vertical gaps */
             gap: 12px;
           }
-          #about { padding-top: 0px; }
+          
+          /* FIX: Adding a small 24px gap so the About section doesn't crash into the Hero buttons */
+          #about { padding-top: 24px; }
 
           .hero-status {
             position: relative; top: auto; left: auto; right: auto; margin-bottom: 8px;
