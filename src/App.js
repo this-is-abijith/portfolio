@@ -268,6 +268,7 @@ export default function App() {
         .proj-card:hover::before { transform: scaleY(1); }
 
         .section { max-width: var(--max); margin: 0 auto; padding: 100px var(--pad); }
+        #about { padding-top: 48px; }
 
         /* Navbar */
         .navbar {
@@ -300,7 +301,7 @@ export default function App() {
 
         /* Hero */
         .hero {
-          min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+          min-height: 85vh; display: flex; flex-direction: column; justify-content: center;
           padding: 80px var(--pad) 64px; max-width: var(--max); margin: 0 auto; position: relative;
         }
         .hero-status {
@@ -367,10 +368,12 @@ export default function App() {
 
           .hero {
             justify-content: center;
-            padding-top: 100px;
-            padding-bottom: 48px;
+            padding-top: 72px;
+            padding-bottom: 0px;
             gap: 12px;
           }
+          #about { padding-top: 0px; }
+
           .hero-status {
             position: relative; top: auto; left: auto; right: auto; margin-bottom: 8px;
           }
@@ -454,12 +457,6 @@ export default function App() {
               <a href="https://www.linkedin.com/in/abijith-binu/" target="_blank" rel="noreferrer" className="btn-outline">LINKEDIN</a>
             </div>
           </motion.div>
-
-          <motion.div className="scroll-hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}>
-            SCROLL
-            <motion.div style={{ width: 1, height: 40, background: "var(--green)" }}
-              animate={{ scaleY: [1, 0.3, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} />
-          </motion.div>
         </div>
       </section>
 
@@ -486,7 +483,7 @@ export default function App() {
 
           {/* Globe replaces stats */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <p className="mono muted" style={{ fontSize: 10, letterSpacing: "0.2em" }}>DRAG TO ROTATE</p>
+            <p className="mono muted" style={{ fontSize: 10, letterSpacing: "0.2em" }}></p>
             <TechGlobe />
           </div>
         </div>
@@ -606,7 +603,6 @@ export default function App() {
           </div>
         </div>
       </motion.section>
-
       {/* ── FOOTER ── */}
       <footer className="footer">
         <span className="mono muted" style={{ fontSize: 11, letterSpacing: "0.1em" }}>© 2026 ABIJITH BINU</span>
