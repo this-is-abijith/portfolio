@@ -7,7 +7,7 @@ const TECHS = [
   "MediaPipe", "Flask", "scikit-learn", "NumPy",
   "YOLO", "LSTM", "Node.js", "MySQL",
   "Git", "Linux", "Vulkan", "Pillow",
-  "Real-ESRGAN", "Machine Learning",
+  "Real-ESRGAN", "Machine Learning","Bootstrap 5","EasyOCR",
 ];
 
 /* ── Evenly distribute points on sphere (Fibonacci lattice) ── */

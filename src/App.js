@@ -115,8 +115,20 @@ const projects = [
     id: "06", name: "AI Image Upscaler",
     desc: "Real-ESRGAN neural network upscaling images up to 4× with GPU acceleration via Vulkan. Batch processing, before/after comparison slider, and fallback chain to Pillow LANCZOS.",
     stack: ["Python", "Real-ESRGAN", "Vulkan", "Pillow"],
-    href: "https://github.com/this-is-abijith",
+    href: "https://github.com/this-is-abijith/image-upscaler-ai",
   },
+  {
+    id: "07", name: "AI Waste Classifier",
+    desc: "A deep learning-based web application that classifies waste into categories using a trained CNN model.",
+    stack: ["Python", "PyTorch", "Flask", "HTML/CSS"],
+    href: "https://github.com/this-is-abijith/ai-waste-classifier",
+  },
+  {
+    id: "08", name: "AI Indian Plate Detector V2",
+    desc: "An AI-powered number plate detection system built with YOLOv8 and EasyOCR, designed specifically for Indian number plates.",
+    stack: ["Python", "YOLOv8 (Ultralytics)", "Flask", "EasyOCR","OpenCV","Bootstrap 5","SQLite"],
+    href: "https://github.com/this-is-abijith/indian-plate-detector",
+  }
 ];
 
 const INITIAL_SHOW = 4;
