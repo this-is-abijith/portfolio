@@ -128,6 +128,12 @@ const projects = [
     desc: "An AI-powered number plate detection system built with YOLOv8 and EasyOCR, designed specifically for Indian number plates.",
     stack: ["Python", "YOLOv8 (Ultralytics)", "Flask", "EasyOCR","OpenCV","Bootstrap 5","SQLite"],
     href: "https://github.com/this-is-abijith/indian-plate-detector",
+  },
+  {
+    id: "09", name: "Multi-Modal Fashion Product Classifier",
+    desc: "A hybrid deep learning system that classifies fashion products into 10 categories by combining ANN and CNN.",
+    stack: ["Python","PyTorch" ],
+    href: "https://github.com/this-is-abijith/multimodal-fashion-classifier",
   }
 ];
 
