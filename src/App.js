@@ -339,7 +339,7 @@ export default function App() {
   const { scrollY } = useScroll();
   const heroNameY     = useTransform(scrollY, [0, 400], [0, -60]);
   const heroOutlineY  = useTransform(scrollY, [0, 400], [0, -40]);
-  const heroBgY       = useTransform(scrollY, [0, 400], [0, 80]);
+
   const heroOpacity   = useTransform(scrollY, [0, 300], [1, 0]);
 
   // Mouse parallax — motion values live here, never inside callbacks
