@@ -1,5 +1,5 @@
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useState, useEffect, useRef, useCallback } from "react";
 import TechGlobe from "./TechGlobe";
 
 /* ─── Glitch Text ──────────────────────────────────────────────────── */
@@ -45,26 +45,213 @@ function Typewriter({ strings, speed = 80 }) {
   );
 }
 
-/* ─── Custom Cursor (mouse only) ──────────────────────────────────── */
+/* ─── Custom Cursor ────────────────────────────────────────────────── */
 function Cursor() {
   const dot  = useRef(null);
   const ring = useRef(null);
   const [isTouch, setIsTouch] = useState(false);
+  const pos = useRef({ x: 0, y: 0 });
+  const target = useRef({ x: 0, y: 0 });
+
   useEffect(() => {
     if (window.matchMedia("(pointer: coarse)").matches) { setIsTouch(true); return; }
     const move = (e) => {
-      if (dot.current)  { dot.current.style.left  = e.clientX - 6 + "px"; dot.current.style.top  = e.clientY - 6 + "px"; }
-      if (ring.current) { ring.current.style.left = e.clientX     + "px"; ring.current.style.top = e.clientY     + "px"; }
+      target.current = { x: e.clientX, y: e.clientY };
+      if (dot.current) {
+        dot.current.style.left = e.clientX - 6 + "px";
+        dot.current.style.top  = e.clientY - 6 + "px";
+      }
     };
+
+    let raf;
+    const smoothRing = () => {
+      pos.current.x += (target.current.x - pos.current.x) * 0.1;
+      pos.current.y += (target.current.y - pos.current.y) * 0.1;
+      if (ring.current) {
+        ring.current.style.left = pos.current.x + "px";
+        ring.current.style.top  = pos.current.y + "px";
+      }
+      raf = requestAnimationFrame(smoothRing);
+    };
+    smoothRing();
+
+    const onEnterInteractive = () => { if (ring.current) ring.current.classList.add("cursor-ring--hover"); };
+    const onLeaveInteractive = () => { if (ring.current) ring.current.classList.remove("cursor-ring--hover"); };
+    document.querySelectorAll("a, button").forEach(el => {
+      el.addEventListener("mouseenter", onEnterInteractive);
+      el.addEventListener("mouseleave", onLeaveInteractive);
+    });
+
     window.addEventListener("mousemove", move);
-    return () => window.removeEventListener("mousemove", move);
+    return () => {
+      window.removeEventListener("mousemove", move);
+      cancelAnimationFrame(raf);
+    };
   }, []);
+
   if (isTouch) return null;
   return (
     <>
       <div ref={dot}  className="cursor" />
       <div ref={ring} className="cursor-ring" />
     </>
+  );
+}
+
+/* ─── Magnetic Button ──────────────────────────────────────────────── */
+function MagneticBtn({ children, className, href, style, onClick, target, rel }) {
+  const ref = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { stiffness: 300, damping: 20 });
+  const springY = useSpring(y, { stiffness: 300, damping: 20 });
+
+  const handleMouseMove = useCallback((e) => {
+    const rect = ref.current.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top  + rect.height / 2;
+    x.set((e.clientX - cx) * 0.35);
+    y.set((e.clientY - cy) * 0.35);
+  }, [x, y]);
+
+  const handleMouseLeave = useCallback(() => {
+    x.set(0); y.set(0);
+  }, [x, y]);
+
+  const Tag = href ? motion.a : motion.button;
+
+  return (
+    <Tag
+      ref={ref}
+      href={href}
+      className={className}
+      style={{ ...style, x: springX, y: springY, display: "inline-block" }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+      target={target}
+      rel={rel}
+      whileTap={{ scale: 0.95 }}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+/* ─── 3D Tilt Card ─────────────────────────────────────────────────── */
+function TiltCard({ children, className, style, ...rest }) {
+  const ref = useRef(null);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [glowPos, setGlowPos] = useState({ x: 50, y: 50 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = useCallback((e) => {
+    const rect = ref.current.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top)  / rect.height;
+    setTilt({ x: (py - 0.5) * -10, y: (px - 0.5) * 10 });
+    setGlowPos({ x: px * 100, y: py * 100 });
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setTilt({ x: 0, y: 0 });
+    setIsHovered(false);
+  }, []);
+
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      style={{
+        ...style,
+        transformStyle: "preserve-3d",
+        transform: `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+        transition: "transform 0.15s ease",
+        position: "relative",
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={handleMouseLeave}
+      {...rest}
+    >
+      {isHovered && (
+        <div
+          style={{
+            position: "absolute", inset: 0, pointerEvents: "none", zIndex: 1,
+            background: `radial-gradient(circle at ${glowPos.x}% ${glowPos.y}%, rgba(0,255,135,0.06) 0%, transparent 60%)`,
+            borderRadius: "inherit",
+          }}
+        />
+      )}
+      {children}
+    </motion.div>
+  );
+}
+
+/* HeroParallax removed — mouseX/mouseY now live at App() top level */
+
+/* ─── Floating Orb ─────────────────────────────────────────────────── */
+function FloatingOrb({ size, x, y, delay, opacity }) {
+  return (
+    <motion.div
+      style={{
+        position: "absolute", width: size, height: size,
+        borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(0,255,135,0.15) 0%, transparent 70%)",
+        left: x, top: y, pointerEvents: "none", zIndex: 0,
+        filter: "blur(40px)",
+      }}
+      animate={{ y: [0, -20, 0], scale: [1, 1.05, 1], opacity: [opacity, opacity * 1.3, opacity] }}
+      transition={{ duration: 6 + delay, repeat: Infinity, ease: "easeInOut", delay }}
+    />
+  );
+}
+
+/* ─── Skill Row with animated fill ────────────────────────────────── */
+function SkillRow({ skill, i }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <motion.div
+      className="skill-row"
+      initial={{ opacity: 0, x: -20 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      transition={{ delay: i * 0.06 }}
+      viewport={{ once: true }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      style={{
+        background: hovered ? "rgba(0,255,135,0.03)" : "transparent",
+        transition: "background 0.3s ease",
+        paddingLeft: hovered ? 8 : 0,
+      }}
+    >
+      <motion.span
+        className="tag"
+        style={{ textAlign: "center" }}
+        animate={{ borderColor: hovered ? "var(--green)" : "var(--green)", scale: hovered ? 1.05 : 1 }}
+        transition={{ duration: 0.2 }}
+      >
+        {skill.tag}
+      </motion.span>
+      <motion.span
+        className="syne"
+        style={{ fontWeight: 700, fontSize: 15, letterSpacing: "0.04em" }}
+        animate={{ color: hovered ? "var(--green)" : "var(--white)", x: hovered ? 4 : 0 }}
+        transition={{ duration: 0.2 }}
+      >
+        {skill.name}
+      </motion.span>
+      <div className="skill-bar-bg" style={{ width: "100%" }}>
+        <motion.div className="skill-bar-fill"
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          transition={{ duration: 1.2, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true }}
+          animate={{ opacity: hovered ? 1 : 0.6 }}
+        />
+      </div>
+    </motion.div>
   );
 }
 
@@ -148,6 +335,33 @@ export default function App() {
   const { scrollYProgress } = useScroll();
   const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
+  // Scroll-driven parallax for hero layers
+  const { scrollY } = useScroll();
+  const heroNameY     = useTransform(scrollY, [0, 400], [0, -60]);
+  const heroOutlineY  = useTransform(scrollY, [0, 400], [0, -40]);
+  const heroBgY       = useTransform(scrollY, [0, 400], [0, 80]);
+  const heroOpacity   = useTransform(scrollY, [0, 300], [1, 0]);
+
+  // Mouse parallax — motion values live here, never inside callbacks
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  // Derived springs for ABIJITH (shallow depth)
+  const nameSpringX = useSpring(useTransform(mouseX, [-1, 1], [-8,  8]),  { stiffness: 100, damping: 20 });
+  const nameSpringY = useSpring(useTransform(mouseY, [-1, 1], [-4,  4]),  { stiffness: 100, damping: 20 });
+  // Derived springs for BINU (deeper depth)
+  const outlineSpringX = useSpring(useTransform(mouseX, [-1, 1], [-14, 14]), { stiffness: 80, damping: 20 });
+  const outlineSpringY = useSpring(useTransform(mouseY, [-1, 1], [-8,  8]),  { stiffness: 80, damping: 20 });
+
+  useEffect(() => {
+    const handleMove = (e) => {
+      mouseX.set((e.clientX / window.innerWidth  - 0.5) * 2);
+      mouseY.set((e.clientY / window.innerHeight - 0.5) * 2);
+    };
+    window.addEventListener("mousemove", handleMove);
+    return () => window.removeEventListener("mousemove", handleMove);
+  }, [mouseX, mouseY]);
+
   const visibleProjects = showAll ? projects : projects.slice(0, INITIAL_SHOW);
 
   useEffect(() => {
@@ -181,24 +395,33 @@ export default function App() {
 
         @media (pointer: fine) { body, a, button { cursor: none; } }
 
+        /* ── Cursor ── */
         .cursor {
           position: fixed; width: 12px; height: 12px;
           background: var(--green); border-radius: 50%;
           pointer-events: none; z-index: 9999; mix-blend-mode: difference;
+          transition: transform 0.1s ease, width 0.2s ease, height 0.2s ease;
         }
         .cursor-ring {
           position: fixed; width: 36px; height: 36px;
-          border: 1px solid var(--green); border-radius: 50%;
+          border: 1px solid rgba(0,255,135,0.6); border-radius: 50%;
           pointer-events: none; z-index: 9998;
           transform: translate(-50%, -50%);
-          transition: left 0.12s ease, top 0.12s ease;
+          transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+        }
+        .cursor-ring--hover {
+          width: 56px; height: 56px;
+          border-color: var(--green);
+          background: rgba(0,255,135,0.04);
         }
 
+        /* ── Progress bar ── */
         .progress-bar {
           position: fixed; top: 0; left: 0; right: 0; height: 2px;
           background: var(--green); transform-origin: left; z-index: 200;
         }
 
+        /* ── Glitch ── */
         .glitch-wrapper { position: relative; display: inline-block; }
         .glitch-active  { animation: glitch 0.2s steps(2) forwards; }
         @keyframes glitch {
@@ -212,6 +435,7 @@ export default function App() {
         .caret { animation: blink 1s step-end infinite; color: var(--green); }
         @keyframes blink { 50% { opacity: 0; } }
 
+        /* ── Scanlines ── */
         body::after {
           content: ''; position: fixed; inset: 0;
           background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px);
@@ -231,42 +455,54 @@ export default function App() {
         .dash-rule { border: none; border-top: 1px dashed var(--border); }
         .sec-num   { font-size: 11px; color: var(--green); letter-spacing: 0.25em; }
 
+        /* ── Tag with hover ── */
         .tag {
           font-family: 'Space Mono', monospace; font-size: 10px; padding: 2px 8px;
           border: 1px solid var(--green); color: var(--green);
           letter-spacing: 0.1em; white-space: nowrap; display: inline-block;
+          transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
         }
+        .tag:hover { background: var(--green); color: var(--black); transform: translateY(-1px); }
 
+        /* ── Buttons ── */
         .btn-primary {
           display: inline-block; background: var(--green); color: var(--black);
           padding: 12px 24px; font-family: 'Space Mono', monospace;
           font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
-          border: none; text-decoration: none;
-          transition: background 0.2s, transform 0.15s;
+          border: none; text-decoration: none; position: relative; overflow: hidden;
+          transition: background 0.2s, box-shadow 0.2s;
         }
-        .btn-primary:hover { background: var(--green-dim); transform: translateY(-2px); }
+        .btn-primary::before {
+          content: ''; position: absolute; inset: 0;
+          background: rgba(255,255,255,0.15);
+          transform: translateX(-100%) skewX(-15deg);
+          transition: transform 0.4s ease;
+        }
+        .btn-primary:hover::before { transform: translateX(200%) skewX(-15deg); }
+        .btn-primary:hover { box-shadow: 0 0 24px rgba(0,255,135,0.3); }
 
         .btn-outline {
           display: inline-block; background: transparent; color: var(--white);
           padding: 12px 24px; font-family: 'Space Mono', monospace;
           font-size: 11px; letter-spacing: 0.12em;
           border: 1px solid var(--border); text-decoration: none;
-          transition: border-color 0.2s, color 0.2s;
+          transition: border-color 0.2s, color 0.2s, box-shadow 0.2s, background 0.2s;
         }
-        .btn-outline:hover { border-color: var(--green); color: var(--green); }
+        .btn-outline:hover { border-color: var(--green); color: var(--green); box-shadow: 0 0 16px rgba(0,255,135,0.12); }
 
         .btn-show-more {
           display: flex; align-items: center; gap: 12px;
           background: none; border: 1px dashed var(--border); color: #555;
           font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.15em;
           padding: 16px 32px; margin: 24px auto 0;
-          transition: border-color 0.2s, color 0.2s;
+          transition: border-color 0.2s, color 0.2s, background 0.2s;
           width: 100%; justify-content: center;
         }
-        .btn-show-more:hover { border-color: var(--green); color: var(--green); }
+        .btn-show-more:hover { border-color: var(--green); color: var(--green); background: rgba(0,255,135,0.02); }
         .btn-show-more .arrow { transition: transform 0.3s; display: inline-block; }
         .btn-show-more.open .arrow { transform: rotate(180deg); }
 
+        /* ── Link underline grow ── */
         .link-grow { position: relative; text-decoration: none; }
         .link-grow::after {
           content: ''; position: absolute; left: 0; bottom: -2px;
@@ -274,9 +510,11 @@ export default function App() {
         }
         .link-grow:hover::after { width: 100%; }
 
+        /* ── Skill bars ── */
         .skill-bar-bg   { height: 2px; background: var(--border); overflow: hidden; flex-shrink: 0; }
         .skill-bar-fill { height: 100%; background: var(--green); transform-origin: left; }
 
+        /* ── Project cards ── */
         .proj-card { position: relative; }
         .proj-card::before {
           content: ''; position: absolute; left: 0; top: 0; bottom: 0;
@@ -285,10 +523,18 @@ export default function App() {
         }
         .proj-card:hover::before { transform: scaleY(1); }
 
+        /* ── VIEW link pulse on card hover ── */
+        .proj-row:hover .proj-view-link {
+          color: var(--green) !important;
+          text-shadow: 0 0 12px rgba(0,255,135,0.5);
+        }
+        .proj-view-link { transition: color 0.2s, text-shadow 0.2s; }
+
+        /* ── Sections ── */
         .section { max-width: var(--max); margin: 0 auto; padding: 100px var(--pad); }
         #about { padding-top: 48px; }
 
-        /* Navbar */
+        /* ── Navbar ── */
         .navbar {
           position: fixed; top: 0; width: 100%;
           border-bottom: 1px solid var(--border);
@@ -303,8 +549,15 @@ export default function App() {
         .nav-link {
           font-family: 'Space Mono', monospace; font-size: 11px;
           letter-spacing: 0.15em; text-transform: uppercase;
-          text-decoration: none; color: #555; transition: color 0.2s;
+          text-decoration: none; color: #555; transition: color 0.2s, letter-spacing 0.2s;
+          position: relative;
         }
+        .nav-link::after {
+          content: ''; position: absolute; bottom: -4px; left: 0;
+          width: 0; height: 1px; background: var(--green);
+          transition: width 0.25s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after { width: 100%; }
         .nav-link.active, .nav-link:hover { color: var(--green); }
         .hamburger { display: none; background: none; border: none; color: var(--white); font-size: 20px; padding: 8px; }
         .mobile-menu {
@@ -317,7 +570,7 @@ export default function App() {
           text-decoration: none; color: var(--white);
         }
 
-        /* Hero */
+        /* ── Hero ── */
         .hero {
           min-height: 85vh; display: flex; flex-direction: column; justify-content: center;
           padding: 80px var(--pad) 64px; max-width: var(--max); margin: 0 auto; position: relative;
@@ -343,72 +596,82 @@ export default function App() {
           writing-mode: vertical-rl; display: flex; align-items: center; gap: 12px;
         }
 
-        /* About */
+        /* ── Scroll hint bounce ── */
+        @keyframes bounce-v {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(6px); }
+        }
+        .scroll-hint-arrow { animation: bounce-v 1.8s ease-in-out infinite; }
+
+        /* ── About ── */
         .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
 
-        /* Skills */
+        /* ── Skills ── */
         .skill-row {
           display: grid; grid-template-columns: 64px 1fr 120px;
           gap: 20px; align-items: center;
-          padding: 18px 0; border-bottom: 1px solid var(--border);
+          padding: 18px 8px; border-bottom: 1px solid var(--border);
+          transition: padding-left 0.2s ease;
         }
 
-        /* Projects */
+        /* ── Projects ── */
         .proj-row {
           display: grid; grid-template-columns: 56px 1fr auto;
           gap: 24px; align-items: center;
           padding: 28px 16px; border: 1px solid var(--border);
           margin-bottom: 1px; overflow: hidden;
+          transition: border-color 0.25s ease;
         }
+        .proj-row:hover { border-color: rgba(0,255,135,0.2); }
 
-        /* Contact */
+        /* ── Contact ── */
         .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
 
-        /* Footer */
+        /* ── Footer ── */
         .footer {
           border-top: 1px solid var(--border); padding: 24px var(--pad);
           max-width: var(--max); margin: 0 auto;
           display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
         }
 
-        /* ════════ TABLET ≤ 900px ════════ */
+        /* ── Floating micro-animation for section numbers ── */
+        @keyframes float-x {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(4px); }
+        }
+        .sec-num { animation: float-x 4s ease-in-out infinite; }
+
+        /* ── TABLET ≤ 900px ── */
         @media (max-width: 900px) {
           .about-grid   { grid-template-columns: 1fr; gap: 48px; }
           .contact-grid { grid-template-columns: 1fr; gap: 48px; }
           .skill-row    { grid-template-columns: 56px 1fr 80px; gap: 14px; }
         }
 
-        /* ════════ MOBILE ≤ 640px ════════ */
+        /* ── MOBILE ≤ 640px ── */
         @media (max-width: 640px) {
           .nav-links { display: none; }
           .hamburger { display: block; }
           .section   { padding: 72px var(--pad); }
-
-          /* FIX: Overriding the min-height and adjusting padding so it wraps the content tightly */
           .hero {
             justify-content: center;
-            padding-top: 100px; /* Space for the fixed navbar */
-            padding-bottom: 0px; 
-            min-height: auto; /* This removes the empty vertical gaps */
+            padding-top: 100px;
+            padding-bottom: 0px;
+            min-height: auto;
             gap: 12px;
           }
-          
-          /* FIX: Adding a small 24px gap so the About section doesn't crash into the Hero buttons */
           #about { padding-top: 24px; }
-
           .hero-status {
             position: relative; top: auto; left: auto; right: auto; margin-bottom: 8px;
           }
-
           .skill-row    { grid-template-columns: 52px 1fr; gap: 12px; }
           .skill-bar-bg { display: none; }
-
           .proj-row  { grid-template-columns: 1fr; gap: 10px; }
           .proj-num  { display: none; }
           .scroll-hint { display: none; }
         }
 
-        /* ════════ SMALL PHONE ≤ 400px ════════ */
+        /* ── SMALL PHONE ≤ 400px ── */
         @media (max-width: 400px) {
           .hero-btns > * { width: 100%; text-align: center; }
         }
@@ -420,14 +683,21 @@ export default function App() {
       {/* ── NAVBAR ── */}
       <nav className="navbar">
         <div className="navbar-inner">
-          <span className="mono green" style={{ fontSize: 13, letterSpacing: "0.15em" }}>
+          <motion.span
+            className="mono green"
+            style={{ fontSize: 13, letterSpacing: "0.15em" }}
+            whileHover={{ letterSpacing: "0.2em" }}
+            transition={{ duration: 0.3 }}
+          >
             ABIJITH<span style={{ color: "var(--white)" }}>.DEV</span>
-          </span>
+          </motion.span>
           <div className="nav-links">
             {NAV_LINKS.map((s) => (
               <a key={s} href={`#${s}`} className={`nav-link${activeSection === s ? " active" : ""}`}>{s}</a>
             ))}
-            <a href="/resume.pdf" className="btn-primary" style={{ padding: "8px 18px" }}>RESUME ↗</a>
+            <MagneticBtn href="/resume.pdf" className="btn-primary" style={{ padding: "8px 18px" }}>
+              RESUME ↗
+            </MagneticBtn>
           </div>
           <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
             {menuOpen ? "✕" : "☰"}
@@ -444,43 +714,92 @@ export default function App() {
       </nav>
 
       {/* ── HERO ── */}
-      <section id="home" style={{ position: "relative" }}>
-        <div className="hero">
-          <motion.div className="hero-status" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-            <span className="mono muted" style={{ fontSize: 11, letterSpacing: "0.1em" }}>SYS:ONLINE // KERALA, IN</span>
-            <span className="mono muted" style={{ fontSize: 11, letterSpacing: "0.1em" }}>
-              <span className="green">●</span> AVAILABLE FOR WORK
-            </span>
-          </motion.div>
+      <section id="home" style={{ position: "relative", overflow: "hidden" }}>
+            {/* Ambient parallax orbs */}
+            <FloatingOrb size={300} x="10%"  y="20%"  delay={0}   opacity={0.4} />
+            <FloatingOrb size={200} x="70%"  y="10%"  delay={1.5} opacity={0.25} />
+            <FloatingOrb size={150} x="85%"  y="60%"  delay={3}   opacity={0.2} />
 
-          <motion.p className="mono sec-num" style={{ marginBottom: 16 }}
-            initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
-            001 // PORTFOLIO
-          </motion.p>
+            <div className="hero">
+              <motion.div
+                className="hero-status"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+              >
+                <span className="mono muted" style={{ fontSize: 11, letterSpacing: "0.1em" }}>SYS:ONLINE // KERALA, IN</span>
+                <motion.span
+                  className="mono muted"
+                  style={{ fontSize: 11, letterSpacing: "0.1em" }}
+                  animate={{ opacity: [1, 0.4, 1] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <span className="green">●</span> AVAILABLE FOR WORK
+                </motion.span>
+              </motion.div>
 
-          <motion.div className="hero-name"
-            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}>
-            <GlitchText text="ABIJITH" />
-          </motion.div>
+              <motion.p className="mono sec-num" style={{ marginBottom: 16 }}
+                initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
+                001 // PORTFOLIO
+              </motion.p>
 
-          <motion.div className="hero-name-outline"
-            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.65, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}>
-            BINU
-          </motion.div>
+              {/* Hero name — scroll parallax + mouse parallax via top-level springs */}
+              <motion.div
+                className="hero-name"
+                style={{ y: heroNameY, opacity: heroOpacity }}
+                initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <motion.span style={{ display: "inline-block", x: nameSpringX, y: nameSpringY }}>
+                  <GlitchText text="ABIJITH" />
+                </motion.span>
+              </motion.div>
 
-          <motion.div className="hero-bottom" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
-            <p className="mono dim" style={{ fontSize: 13 }}>
-              <Typewriter strings={["AI / ML Developer", "React Developer", "MSc Student", "Building the future"]} />
-            </p>
-            <div className="hero-btns">
-              <a href="https://github.com/this-is-abijith" target="_blank" rel="noreferrer" className="btn-primary">GITHUB ↗</a>
-              <a href="https://www.linkedin.com/in/abijith-binu/" target="_blank" rel="noreferrer" className="btn-outline">LINKEDIN</a>
+              {/* Outlined name — deeper parallax layer */}
+              <motion.div
+                className="hero-name-outline"
+                style={{ y: heroOutlineY, opacity: heroOpacity }}
+                initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.65, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <motion.span style={{ display: "inline-block", x: outlineSpringX, y: outlineSpringY }}>
+                  BINU
+                </motion.span>
+              </motion.div>
+
+              <motion.div className="hero-bottom" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
+                <p className="mono dim" style={{ fontSize: 13 }}>
+                  <Typewriter strings={["AI / ML Developer", "React Developer", "MSc Student", "Building the future"]} />
+                </p>
+                <div className="hero-btns">
+                  <MagneticBtn
+                    href="https://github.com/this-is-abijith"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-primary"
+                  >
+                    GITHUB ↗
+                  </MagneticBtn>
+                  <MagneticBtn
+                    href="https://www.linkedin.com/in/abijith-binu/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-outline"
+                  >
+                    LINKEDIN
+                  </MagneticBtn>
+                </div>
+              </motion.div>
+
+              {/* Scroll hint */}
+              <motion.div
+                className="scroll-hint"
+                style={{ opacity: heroOpacity }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
+              >
+                <span className="scroll-hint-arrow">↓</span>
+                <span>SCROLL</span>
+              </motion.div>
             </div>
-          </motion.div>
-        </div>
-      </section>
+          </section>
 
       {/* ── ABOUT ── */}
       <motion.section id="about" className="section"
@@ -490,9 +809,21 @@ export default function App() {
           <div>
             <p className="mono sec-num" style={{ marginBottom: 16 }}>002 // ABOUT</p>
             <h2 className="syne" style={{ fontSize: "clamp(28px, 5vw, 52px)", fontWeight: 800, lineHeight: 1.05, marginBottom: 28 }}>
-              BUILDING<br />
-              <span style={{ WebkitTextStroke: "1px var(--white)", color: "transparent" }}>INTELLIGENT</span><br />
-              SYSTEMS
+              <motion.span
+                style={{ display: "block" }}
+                initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }} viewport={{ once: true }}
+              >BUILDING</motion.span>
+              <motion.span
+                style={{ display: "block", WebkitTextStroke: "1px var(--white)", color: "transparent" }}
+                initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }} viewport={{ once: true }}
+              >INTELLIGENT</motion.span>
+              <motion.span
+                style={{ display: "block" }}
+                initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }} viewport={{ once: true }}
+              >SYSTEMS</motion.span>
             </h2>
             <p className="mono dim" style={{ lineHeight: 1.9, fontSize: 12, marginBottom: 20 }}>
               MSc student passionate about Artificial Intelligence, Machine Learning and modern web development.
@@ -503,7 +834,6 @@ export default function App() {
             </p>
           </div>
 
-          {/* Globe replaces stats */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <p className="mono muted" style={{ fontSize: 10, letterSpacing: "0.2em" }}></p>
             <TechGlobe />
@@ -520,22 +850,7 @@ export default function App() {
         <p className="mono sec-num" style={{ marginBottom: 16 }}>003 // SKILLS</p>
         <h2 className="syne" style={{ fontSize: "clamp(28px, 5vw, 52px)", fontWeight: 800, marginBottom: 56 }}>TECH STACK</h2>
         {skillData.map((skill, i) => (
-          <motion.div key={i} className="skill-row"
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.06 }}
-            viewport={{ once: true }}>
-            <span className="tag" style={{ textAlign: "center" }}>{skill.tag}</span>
-            <span className="syne" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "0.04em" }}>{skill.name}</span>
-            <div className="skill-bar-bg" style={{ width: "100%" }}>
-              <motion.div className="skill-bar-fill"
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                transition={{ duration: 1.2, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-                viewport={{ once: true }}
-              />
-            </div>
-          </motion.div>
+          <SkillRow key={i} skill={skill} i={i} />
         ))}
       </motion.section>
 
@@ -548,40 +863,65 @@ export default function App() {
         <p className="mono sec-num" style={{ marginBottom: 16 }}>004 // PROJECTS</p>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 56, flexWrap: "wrap", gap: 16 }}>
           <h2 className="syne" style={{ fontSize: "clamp(28px, 5vw, 52px)", fontWeight: 800 }}>SELECTED WORK</h2>
-          <span className="mono muted" style={{ fontSize: 11, letterSpacing: "0.1em" }}>
+          <motion.span
+            className="mono muted"
+            style={{ fontSize: 11, letterSpacing: "0.1em" }}
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
             {showAll ? projects.length : Math.min(INITIAL_SHOW, projects.length)} / {projects.length} PROJECTS
-          </span>
+          </motion.span>
         </div>
 
         {visibleProjects.map((proj, i) => (
-          <motion.div key={proj.id} className="proj-card proj-row"
+          <TiltCard
+            key={proj.id}
+            className="proj-card proj-row"
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08 }}
             viewport={{ once: true }}
-            whileHover={{ backgroundColor: "rgba(0,255,135,0.03)" }}>
-            <span className="syne proj-num" style={{ fontSize: 32, fontWeight: 800, color: "var(--border)", lineHeight: 1 }}>
+          >
+            <motion.span
+              className="syne proj-num"
+              style={{ fontSize: 32, fontWeight: 800, color: "var(--border)", lineHeight: 1 }}
+              whileHover={{ color: "var(--green)", scale: 1.1, originX: 0 }}
+              transition={{ duration: 0.2 }}
+            >
               {proj.id}
-            </span>
-            <div>
+            </motion.span>
+            <div style={{ position: "relative", zIndex: 2 }}>
               <h3 className="syne" style={{ fontSize: "clamp(16px, 3vw, 22px)", fontWeight: 700, marginBottom: 8 }}>{proj.name}</h3>
               <p className="mono dim" style={{ fontSize: 12, lineHeight: 1.7, marginBottom: 14, maxWidth: 560 }}>{proj.desc}</p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {proj.stack.map((s, j) => <span key={j} className="tag">{s}</span>)}
+                {proj.stack.map((s, j) => (
+                  <motion.span
+                    key={j} className="tag"
+                    initial={{ opacity: 0, y: 4 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: j * 0.04 + i * 0.08 }}
+                    viewport={{ once: true }}
+                  >
+                    {s}
+                  </motion.span>
+                ))}
               </div>
             </div>
             <a href={proj.href} target="_blank" rel="noreferrer"
-              className="mono link-grow green" style={{ fontSize: 11, letterSpacing: "0.1em", whiteSpace: "nowrap" }}>
+              className="mono link-grow green proj-view-link"
+              style={{ fontSize: 11, letterSpacing: "0.1em", whiteSpace: "nowrap", position: "relative", zIndex: 2 }}>
               VIEW ↗
             </a>
-          </motion.div>
+          </TiltCard>
         ))}
 
         {projects.length > INITIAL_SHOW && (
           <motion.button
             className={`btn-show-more${showAll ? " open" : ""}`}
             onClick={() => setShowAll(!showAll)}
-            whileTap={{ scale: 0.98 }}>
+            whileTap={{ scale: 0.98 }}
+            whileHover={{ borderStyle: "solid" }}
+          >
             <span>{showAll ? "SHOW LESS" : `SHOW MORE  (+${projects.length - INITIAL_SHOW})`}</span>
             <span className="arrow">▼</span>
           </motion.button>
@@ -598,9 +938,21 @@ export default function App() {
         <div className="contact-grid">
           <div>
             <h2 className="syne" style={{ fontSize: "clamp(28px, 5vw, 52px)", fontWeight: 800, lineHeight: 1.05, marginBottom: 20 }}>
-              LET'S<br />
-              <span style={{ WebkitTextStroke: "1px var(--white)", color: "transparent" }}>WORK</span><br />
-              TOGETHER
+              <motion.span style={{ display: "block" }}
+                initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }} viewport={{ once: true }}>
+                LET'S
+              </motion.span>
+              <motion.span style={{ display: "block", WebkitTextStroke: "1px var(--white)", color: "transparent" }}
+                initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }} viewport={{ once: true }}>
+                WORK
+              </motion.span>
+              <motion.span style={{ display: "block" }}
+                initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }} viewport={{ once: true }}>
+                TOGETHER
+              </motion.span>
             </h2>
             <p className="mono dim" style={{ fontSize: 12, lineHeight: 1.9 }}>
               Open to collaborations, internships, and full-time opportunities in AI/ML and web development.
@@ -616,18 +968,32 @@ export default function App() {
               </a>
             </div>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
-              <a href="https://github.com/this-is-abijith" target="_blank" rel="noreferrer" className="btn-outline">GITHUB ↗</a>
-              <a href="https://www.linkedin.com/in/abijith-binu/" target="_blank" rel="noreferrer" className="btn-outline">LINKEDIN ↗</a>
+              <MagneticBtn href="https://github.com/this-is-abijith" target="_blank" rel="noreferrer" className="btn-outline">
+                GITHUB ↗
+              </MagneticBtn>
+              <MagneticBtn href="https://www.linkedin.com/in/abijith-binu/" target="_blank" rel="noreferrer" className="btn-outline">
+                LINKEDIN ↗
+              </MagneticBtn>
             </div>
             <div style={{ borderTop: "1px solid var(--border)", paddingTop: 28 }}>
-              <a href="mailto:abijithbinu654@gmail.com" className="btn-primary">SEND MESSAGE ↗</a>
+              <MagneticBtn href="mailto:abijithbinu654@gmail.com" className="btn-primary">
+                SEND MESSAGE ↗
+              </MagneticBtn>
             </div>
           </div>
         </div>
       </motion.section>
+
       {/* ── FOOTER ── */}
       <footer className="footer">
-        <span className="mono muted" style={{ fontSize: 11, letterSpacing: "0.1em" }}>© 2026 ABIJITH BINU</span>
+        <motion.span
+          className="mono muted"
+          style={{ fontSize: 11, letterSpacing: "0.1em" }}
+          whileHover={{ color: "var(--green)" }}
+          transition={{ duration: 0.2 }}
+        >
+          © 2026 ABIJITH BINU
+        </motion.span>
         <span className="mono muted" style={{ fontSize: 11, letterSpacing: "0.1em" }}>
           BUILT WITH REACT // <span className="green">ABIJITH-DEV.VERCEL.APP</span>
         </span>
