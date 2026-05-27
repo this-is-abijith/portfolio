@@ -207,49 +207,30 @@ function FloatingOrb({ size, x, y, delay, opacity }) {
   );
 }
 
-/* ─── Skill Row with animated fill ────────────────────────────────── */
-function SkillRow({ skill, i }) {
-  const [hovered, setHovered] = useState(false);
-
+/* ─── Skill Category Row ───────────────────────────────────────────── */
+function SkillCategory({ category, skills, i }) {
   return (
     <motion.div
-      className="skill-row"
-      initial={{ opacity: 0, x: -20 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      transition={{ delay: i * 0.06 }}
+      className="skill-category"
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       viewport={{ once: true }}
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
-      style={{
-        background: hovered ? "rgba(0,255,135,0.03)" : "transparent",
-        transition: "background 0.3s ease",
-        paddingLeft: hovered ? 8 : 0,
-      }}
     >
-      <motion.span
-        className="tag"
-        style={{ textAlign: "center" }}
-        animate={{ borderColor: hovered ? "var(--green)" : "var(--green)", scale: hovered ? 1.05 : 1 }}
-        transition={{ duration: 0.2 }}
-      >
-        {skill.tag}
-      </motion.span>
-      <motion.span
-        className="syne"
-        style={{ fontWeight: 700, fontSize: 15, letterSpacing: "0.04em" }}
-        animate={{ color: hovered ? "var(--green)" : "var(--white)", x: hovered ? 4 : 0 }}
-        transition={{ duration: 0.2 }}
-      >
-        {skill.name}
-      </motion.span>
-      <div className="skill-bar-bg" style={{ width: "100%" }}>
-        <motion.div className="skill-bar-fill"
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          transition={{ duration: 1.2, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-          viewport={{ once: true }}
-          animate={{ opacity: hovered ? 1 : 0.6 }}
-        />
+      <span className="skill-category-label">{category}</span>
+      <div className="skill-tags">
+        {skills.map((s, j) => (
+          <motion.span
+            key={j}
+            className="skill-tag"
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ delay: i * 0.08 + j * 0.03 }}
+            viewport={{ once: true }}
+          >
+            {s}
+          </motion.span>
+        ))}
       </div>
     </motion.div>
   );
@@ -257,14 +238,26 @@ function SkillRow({ skill, i }) {
 
 /* ─── Data ─────────────────────────────────────────────────────────── */
 const skillData = [
-  { name: "Python",           tag: "LANG"  },
-  { name: "Machine Learning", tag: "AI"    },
-  { name: "TensorFlow",       tag: "AI"    },
-  { name: "React",            tag: "WEB"   },
-  { name: "Node.js",          tag: "WEB"   },
-  { name: "MySQL",            tag: "DB"    },
-  { name: "Git",              tag: "TOOLS" },
-  { name: "Linux",            tag: "TOOLS" },
+  {
+    category: "LANGUAGES",
+    skills: ["Python", "JavaScript", "SQL"],
+  },
+  {
+    category: "AI / ML",
+    skills: ["Machine Learning", "TensorFlow", "PyTorch", "scikit-learn", "OpenCV", "MediaPipe", "YOLOv8", "EasyOCR", "Real-ESRGAN", "LSTM", "CNN", "DCGAN"],
+  },
+  {
+    category: "WEB & BACKEND",
+    skills: ["React", "Flask", "Node.js", "Bootstrap 5", "HTML/CSS"],
+  },
+  {
+    category: "DATABASES",
+    skills: ["MySQL", "SQLite", "Supabase"],
+  },
+  {
+    category: "TOOLS & INFRA",
+    skills: ["Git", "Linux", "Vulkan / ncnn", "Vercel", "Roboflow", "Miniconda", "VS Code"],
+  },
 ];
 
 const projects = [
@@ -321,6 +314,12 @@ const projects = [
     desc: "A hybrid deep learning system that classifies fashion products into 10 categories by combining ANN and CNN.",
     stack: ["Python","PyTorch" ],
     href: "https://github.com/this-is-abijith/multimodal-fashion-classifier",
+  },
+   {
+    id: "10", name: "SignBridge",
+    desc: "Bridging the gap between sign language and spoken English using AI, MediaPipe, and a local LLM — fully offline, no internet required.",
+    stack: ["MediaPipe","Custom LSTM","Python","Ollama","React","Web Speech API" ],
+    href: "https://github.com/this-is-abijith/signbridge",
   }
 ];
 
@@ -510,9 +509,29 @@ export default function App() {
         }
         .link-grow:hover::after { width: 100%; }
 
-        /* ── Skill bars ── */
-        .skill-bar-bg   { height: 2px; background: var(--border); overflow: hidden; flex-shrink: 0; }
-        .skill-bar-fill { height: 100%; background: var(--green); transform-origin: left; }
+        /* ── Skills grid ── */
+        .skills-categories { display: flex; flex-direction: column; gap: 12px; }
+        .skill-category {
+          border: 1px solid var(--border); padding: 20px 24px;
+          transition: border-color 0.25s ease, background 0.25s ease;
+        }
+        .skill-category:hover { border-color: rgba(0,255,135,0.25); background: rgba(0,255,135,0.02); }
+        .skill-category-label {
+          font-family: 'Space Mono', monospace; font-size: 9px;
+          letter-spacing: 0.3em; color: var(--green); margin-bottom: 14px; display: block;
+        }
+        .skill-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .skill-tag {
+          font-family: 'Space Mono', monospace; font-size: 10px;
+          padding: 5px 12px; border: 1px solid var(--border);
+          color: #999; letter-spacing: 0.06em; white-space: nowrap;
+          transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.15s;
+          cursor: default;
+        }
+        .skill-tag:hover {
+          border-color: var(--green); color: var(--green);
+          background: rgba(0,255,135,0.05); transform: translateY(-2px);
+        }
 
         /* ── Project cards ── */
         .proj-card { position: relative; }
@@ -606,13 +625,7 @@ export default function App() {
         /* ── About ── */
         .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
 
-        /* ── Skills ── */
-        .skill-row {
-          display: grid; grid-template-columns: 64px 1fr 120px;
-          gap: 20px; align-items: center;
-          padding: 18px 8px; border-bottom: 1px solid var(--border);
-          transition: padding-left 0.2s ease;
-        }
+
 
         /* ── Projects ── */
         .proj-row {
@@ -645,7 +658,6 @@ export default function App() {
         @media (max-width: 900px) {
           .about-grid   { grid-template-columns: 1fr; gap: 48px; }
           .contact-grid { grid-template-columns: 1fr; gap: 48px; }
-          .skill-row    { grid-template-columns: 56px 1fr 80px; gap: 14px; }
         }
 
         /* ── MOBILE ≤ 640px ── */
@@ -664,8 +676,6 @@ export default function App() {
           .hero-status {
             position: relative; top: auto; left: auto; right: auto; margin-bottom: 8px;
           }
-          .skill-row    { grid-template-columns: 52px 1fr; gap: 12px; }
-          .skill-bar-bg { display: none; }
           .proj-row  { grid-template-columns: 1fr; gap: 10px; }
           .proj-num  { display: none; }
           .scroll-hint { display: none; }
@@ -849,9 +859,11 @@ export default function App() {
         transition={{ duration: 0.7 }} viewport={{ once: true }}>
         <p className="mono sec-num" style={{ marginBottom: 16 }}>003 // SKILLS</p>
         <h2 className="syne" style={{ fontSize: "clamp(28px, 5vw, 52px)", fontWeight: 800, marginBottom: 56 }}>TECH STACK</h2>
-        {skillData.map((skill, i) => (
-          <SkillRow key={i} skill={skill} i={i} />
-        ))}
+        <div className="skills-categories">
+          {skillData.map((group, i) => (
+            <SkillCategory key={i} category={group.category} skills={group.skills} i={i} />
+          ))}
+        </div>
       </motion.section>
 
       <hr className="dash-rule" />
