@@ -2,6 +2,26 @@ import { motion, useScroll, useTransform, useSpring, useMotionValue } from "fram
 import { useState, useEffect, useRef, useCallback } from "react";
 import TechGlobe from "./TechGlobe";
 
+/* ─── Background Blobs (make glass visible) ───────────────────────── */
+function BackgroundBlobs() {
+  return (
+    <div style={{ position:"fixed", inset:0, zIndex:0, pointerEvents:"none", overflow:"hidden" }}>
+      <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", top:"-150px", left:"-100px",
+        background:"radial-gradient(circle, rgba(0,255,135,0.13) 0%, transparent 70%)", filter:"blur(70px)",
+        animation:"blobA 9s ease-in-out infinite" }} />
+      <div style={{ position:"absolute", width:450, height:450, borderRadius:"50%", top:"35%", right:"-80px",
+        background:"radial-gradient(circle, rgba(0,210,160,0.10) 0%, transparent 70%)", filter:"blur(80px)",
+        animation:"blobB 11s ease-in-out infinite" }} />
+      <div style={{ position:"absolute", width:380, height:380, borderRadius:"50%", bottom:"8%", left:"18%",
+        background:"radial-gradient(circle, rgba(0,255,135,0.09) 0%, transparent 70%)", filter:"blur(90px)",
+        animation:"blobC 13s ease-in-out infinite" }} />
+      <div style={{ position:"absolute", width:220, height:220, borderRadius:"50%", top:"8%", right:"28%",
+        background:"radial-gradient(circle, rgba(0,255,135,0.12) 0%, transparent 70%)", filter:"blur(55px)",
+        animation:"blobA 7s ease-in-out infinite reverse" }} />
+    </div>
+  );
+}
+
 /* ─── Glitch Text ──────────────────────────────────────────────────── */
 function GlitchText({ text }) {
   const [glitching, setGlitching] = useState(false);
@@ -314,12 +334,6 @@ const projects = [
     desc: "A hybrid deep learning system that classifies fashion products into 10 categories by combining ANN and CNN.",
     stack: ["Python","PyTorch" ],
     href: "https://github.com/this-is-abijith/multimodal-fashion-classifier",
-  },
-   {
-    id: "10", name: "SignBridge",
-    desc: "Bridging the gap between sign language and spoken English using AI, MediaPipe, and a local LLM — fully offline, no internet required.",
-    stack: ["MediaPipe","Custom LSTM","Python","Ollama","React","Web Speech API" ],
-    href: "https://github.com/this-is-abijith/signbridge",
   }
 ];
 
@@ -465,39 +479,56 @@ export default function App() {
 
         /* ── Buttons ── */
         .btn-primary {
-          display: inline-block; background: var(--green); color: var(--black);
+          display: inline-block;
+          background: rgba(0,255,135,0.15);
+          color: var(--green);
           padding: 12px 24px; font-family: 'Space Mono', monospace;
           font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
-          border: none; text-decoration: none; position: relative; overflow: hidden;
-          transition: background 0.2s, box-shadow 0.2s;
+          border: 1px solid rgba(0,255,135,0.45); text-decoration: none;
+          position: relative; overflow: hidden;
+          backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+          transition: background 0.25s, box-shadow 0.25s, border-color 0.25s;
         }
         .btn-primary::before {
           content: ''; position: absolute; inset: 0;
-          background: rgba(255,255,255,0.15);
+          background: rgba(255,255,255,0.08);
           transform: translateX(-100%) skewX(-15deg);
           transition: transform 0.4s ease;
         }
         .btn-primary:hover::before { transform: translateX(200%) skewX(-15deg); }
-        .btn-primary:hover { box-shadow: 0 0 24px rgba(0,255,135,0.3); }
+        .btn-primary:hover {
+          background: rgba(0,255,135,0.25);
+          border-color: var(--green);
+          box-shadow: 0 0 28px rgba(0,255,135,0.25), inset 0 0 20px rgba(0,255,135,0.05);
+        }
 
         .btn-outline {
-          display: inline-block; background: transparent; color: var(--white);
+          display: inline-block;
+          background: rgba(255,255,255,0.03);
+          color: rgba(240,237,230,0.65);
           padding: 12px 24px; font-family: 'Space Mono', monospace;
           font-size: 11px; letter-spacing: 0.12em;
-          border: 1px solid var(--border); text-decoration: none;
-          transition: border-color 0.2s, color 0.2s, box-shadow 0.2s, background 0.2s;
+          border: 1px solid rgba(255,255,255,0.1); text-decoration: none;
+          backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+          transition: border-color 0.25s, color 0.25s, background 0.25s, box-shadow 0.25s;
         }
-        .btn-outline:hover { border-color: var(--green); color: var(--green); box-shadow: 0 0 16px rgba(0,255,135,0.12); }
+        .btn-outline:hover {
+          border-color: rgba(0,255,135,0.45); color: var(--green);
+          background: rgba(0,255,135,0.06);
+          box-shadow: 0 0 16px rgba(0,255,135,0.1);
+        }
 
         .btn-show-more {
           display: flex; align-items: center; gap: 12px;
-          background: none; border: 1px dashed var(--border); color: #555;
+          background: rgba(255,255,255,0.02);
+          backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+          border: 1px dashed rgba(255,255,255,0.12); color: #555;
           font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.15em;
           padding: 16px 32px; margin: 24px auto 0;
           transition: border-color 0.2s, color 0.2s, background 0.2s;
           width: 100%; justify-content: center;
         }
-        .btn-show-more:hover { border-color: var(--green); color: var(--green); background: rgba(0,255,135,0.02); }
+        .btn-show-more:hover { border-color: rgba(0,255,135,0.4); color: var(--green); background: rgba(0,255,135,0.04); }
         .btn-show-more .arrow { transition: transform 0.3s; display: inline-block; }
         .btn-show-more.open .arrow { transform: rotate(180deg); }
 
@@ -510,12 +541,17 @@ export default function App() {
         .link-grow:hover::after { width: 100%; }
 
         /* ── Skills grid ── */
-        .skills-categories { display: flex; flex-direction: column; gap: 12px; }
+        .skills-categories { display: flex; flex-direction: column; gap: 8px; }
         .skill-category {
-          border: 1px solid var(--border); padding: 20px 24px;
+          background: rgba(255,255,255,0.025);
+          backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+          border: 1px solid rgba(255,255,255,0.07); padding: 20px 24px;
           transition: border-color 0.25s ease, background 0.25s ease;
         }
-        .skill-category:hover { border-color: rgba(0,255,135,0.25); background: rgba(0,255,135,0.02); }
+        .skill-category:hover {
+          border-color: rgba(0,255,135,0.2);
+          background: rgba(0,255,135,0.035);
+        }
         .skill-category-label {
           font-family: 'Space Mono', monospace; font-size: 9px;
           letter-spacing: 0.3em; color: var(--green); margin-bottom: 14px; display: block;
@@ -523,14 +559,17 @@ export default function App() {
         .skill-tags { display: flex; flex-wrap: wrap; gap: 8px; }
         .skill-tag {
           font-family: 'Space Mono', monospace; font-size: 10px;
-          padding: 5px 12px; border: 1px solid var(--border);
-          color: #999; letter-spacing: 0.06em; white-space: nowrap;
+          padding: 5px 12px;
+          background: rgba(0,255,135,0.04);
+          backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+          border: 1px solid rgba(0,255,135,0.18);
+          color: rgba(0,255,135,0.65); letter-spacing: 0.06em; white-space: nowrap;
           transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.15s;
           cursor: default;
         }
         .skill-tag:hover {
           border-color: var(--green); color: var(--green);
-          background: rgba(0,255,135,0.05); transform: translateY(-2px);
+          background: rgba(0,255,135,0.1); transform: translateY(-2px);
         }
 
         /* ── Project cards ── */
@@ -556,8 +595,10 @@ export default function App() {
         /* ── Navbar ── */
         .navbar {
           position: fixed; top: 0; width: 100%;
-          border-bottom: 1px solid var(--border);
-          background: rgba(8,8,8,0.92); backdrop-filter: blur(12px); z-index: 100;
+          border-bottom: 1px solid rgba(0,255,135,0.1);
+          background: rgba(8,8,8,0.45);
+          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+          z-index: 100;
         }
         .navbar-inner {
           max-width: var(--max); margin: 0 auto;
@@ -580,7 +621,9 @@ export default function App() {
         .nav-link.active, .nav-link:hover { color: var(--green); }
         .hamburger { display: none; background: none; border: none; color: var(--white); font-size: 20px; padding: 8px; }
         .mobile-menu {
-          border-top: 1px solid var(--border); background: var(--black);
+          border-top: 1px solid rgba(0,255,135,0.1);
+          background: rgba(8,8,8,0.6);
+          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
           padding: 24px var(--pad); display: flex; flex-direction: column; gap: 20px;
         }
         .mobile-menu a {
@@ -631,21 +674,38 @@ export default function App() {
         .proj-row {
           display: grid; grid-template-columns: 56px 1fr auto;
           gap: 24px; align-items: center;
-          padding: 28px 16px; border: 1px solid var(--border);
-          margin-bottom: 1px; overflow: hidden;
-          transition: border-color 0.25s ease;
+          padding: 28px 20px;
+          background: rgba(255,255,255,0.02);
+          backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+          border: 1px solid rgba(255,255,255,0.06);
+          margin-bottom: 2px; overflow: hidden;
+          transition: border-color 0.25s ease, background 0.25s ease;
         }
-        .proj-row:hover { border-color: rgba(0,255,135,0.2); }
+        .proj-row:hover {
+          border-color: rgba(0,255,135,0.18);
+          background: rgba(0,255,135,0.03);
+        }
 
         /* ── Contact ── */
         .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
 
         /* ── Footer ── */
         .footer {
-          border-top: 1px solid var(--border); padding: 24px var(--pad);
-          max-width: var(--max); margin: 0 auto;
+          border-top: 1px solid rgba(255,255,255,0.06);
+          background: rgba(8,8,8,0.4);
+          backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+          padding: 24px var(--pad);
+          max-width: 100%; margin: 0;
           display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
         }
+
+        /* ── Dividers ── */
+        .dash-rule { border: none; border-top: 1px solid rgba(255,255,255,0.06); }
+
+        /* ── Blob keyframes ── */
+        @keyframes blobA { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-28px) scale(1.04)} }
+        @keyframes blobB { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(22px) scale(0.97)} }
+        @keyframes blobC { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-16px) scale(1.03)} }
 
         /* ── Floating micro-animation for section numbers ── */
         @keyframes float-x {
@@ -687,6 +747,7 @@ export default function App() {
         }
       `}</style>
 
+      <BackgroundBlobs />
       <Cursor />
       <motion.div className="progress-bar" style={{ scaleX }} />
 
@@ -970,7 +1031,12 @@ export default function App() {
               Open to collaborations, internships, and full-time opportunities in AI/ML and web development.
             </p>
           </div>
-          <div>
+          <div style={{
+            background: "rgba(255,255,255,0.025)",
+            backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            padding: "32px",
+          }}>
             <div style={{ marginBottom: 28 }}>
               <p className="mono green" style={{ fontSize: 10, letterSpacing: "0.25em", marginBottom: 8 }}>EMAIL</p>
               <a href="mailto:abijithbinu654@gmail.com"
@@ -987,7 +1053,7 @@ export default function App() {
                 LINKEDIN ↗
               </MagneticBtn>
             </div>
-            <div style={{ borderTop: "1px solid var(--border)", paddingTop: 28 }}>
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 28 }}>
               <MagneticBtn href="mailto:abijithbinu654@gmail.com" className="btn-primary">
                 SEND MESSAGE ↗
               </MagneticBtn>
