@@ -281,41 +281,41 @@ const skillData = [
 ];
 
 const projects = [
+   {
+    id: "01", name: "Pixelarc",
+    desc: "Pixelarc is an AI-powered image upscaler available as a native Android app. Pick any photo, choose your upscale factor (2×, 3×, or 4×), and let Real-ESRGAN reconstruct fine detail that bicubic resizing can't recover.",
+    stack: ["React Native", "Expo" , "Flask" , "Real-ESRGAN (ncnn-Vulkan)" , "PyTorch" , "Render" , "EAS Build"],
+    href: "https://github.com/this-is-abijith/pixelarc",
+  },
   {
-    id: "01", name: "Brain Tumor Detection",
+    id: "02", name: "Brain Tumor Detection",
     desc: "CNN model detecting brain tumors from MRI images with high accuracy using deep learning classification.",
     stack: ["Python", "TensorFlow", "CNN", "OpenCV"],
     href: "https://github.com/this-is-abijith/brain-tumor-detection-ai",
   },
   {
-    id: "02", name: "Number Plate Detection",
+    id: "03", name: "Number Plate Detection",
     desc: "Real-time number plate detection and recognition system built with YOLO model.",
     stack: ["Python", "YOLO", "OpenCV", "OCR"],
     href: "https://github.com/this-is-abijith/ai-number-plate-detector",
   },
   {
-    id: "03", name: "Bitcoin Price Prediction",
+    id: "04", name: "Bitcoin Price Prediction",
     desc: "ML model forecasting cryptocurrency price trends using LSTM and time-series analysis.",
     stack: ["Python", "LSTM", "Pandas", "scikit-learn"],
     href: "https://github.com/this-is-abijith/bitcoin-price-prediction-ai",
   },
   {
-    id: "04", name: "Rainfall Prediction App",
+    id: "05", name: "Rainfall Prediction App",
     desc: "Ensemble ML model (Random Forest + Gradient Boosting) predicting rain probability from weather inputs via a Flask web interface.",
     stack: ["Python", "Flask", "scikit-learn", "Random Forest"],
     href: "https://github.com/this-is-abijith/rainfall-prediction-app",
   },
   {
-    id: "05", name: "Hand Gesture Particle System",
+    id: "06", name: "Hand Gesture Particle System",
     desc: "Real-time hand gesture controlled particle system using computer vision and MediaPipe for gesture recognition.",
     stack: ["Python", "MediaPipe", "OpenCV", "NumPy"],
     href: "https://github.com/this-is-abijith/hand-gesture-particle-system",
-  },
-  {
-    id: "06", name: "AI Image Upscaler",
-    desc: "Real-ESRGAN neural network upscaling images up to 4× with GPU acceleration via Vulkan. Batch processing, before/after comparison slider, and fallback chain to Pillow LANCZOS.",
-    stack: ["Python", "Real-ESRGAN", "Vulkan", "Pillow"],
-    href: "https://github.com/this-is-abijith/image-upscaler-ai",
   },
   {
     id: "07", name: "AI Waste Classifier",
